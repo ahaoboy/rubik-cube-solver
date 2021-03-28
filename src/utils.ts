@@ -1,4 +1,4 @@
-import { faceNums, faceNames } from './constants';
+import { faceNums } from './constants';
 // n choose k, i.e. the binomial coeffiecient
 export const Cnk = (n: number, k: number) => {
   if (n < k) {
@@ -50,11 +50,11 @@ export const initFacelet = () => {
   const _D = (x: number) => _F(9) + x;
   const _L = (x: number) => _D(9) + x;
   const _B = (x: number) => _L(9) + x;
-  return [
+  return {
     // Centers
-    [4, 13, 22, 31, 40, 49],
+    centerFacelet: [4, 13, 22, 31, 40, 49],
     // Corners
-    [
+    cornerFacelet: [
       [_U(9), _R(1), _F(3)],
       [_U(7), _F(1), _L(3)],
       [_U(1), _L(1), _B(3)],
@@ -65,7 +65,7 @@ export const initFacelet = () => {
       [_D(9), _R(9), _B(7)],
     ],
     // Edges
-    [
+    edgeFacelet: [
       [_U(6), _R(2)],
       [_U(8), _F(2)],
       [_U(4), _L(2)],
@@ -79,11 +79,11 @@ export const initFacelet = () => {
       [_B(6), _L(4)],
       [_B(4), _R(6)],
     ],
-  ] as const;
+  } as const;
 };
 
 // Rotate elements between l and r left by one place
-export const rotateLeft = <T>(array: number[], l: number, r: number) => {
+export const rotateLeft = (array: number[], l: number, r: number) => {
   const tmp = array[l];
   for (
     let i = l, end = r - 1, asc = l <= end;
@@ -96,7 +96,7 @@ export const rotateLeft = <T>(array: number[], l: number, r: number) => {
 };
 
 // Rotate elements between l and r right by one place
-export const rotateRight = <T>(
+export const rotateRight = (
   //   array: { [x: string]: T },
   array: number[],
   l: number,
@@ -237,13 +237,12 @@ export const randomizeOrientation = (
   arr: number[],
   numOrientations: number
 ) => {
-  let ori = 0;
   for (
     let i = 0, end = arr.length - 1, asc = 0 <= end;
     asc ? i <= end : i >= end;
     asc ? i++ : i--
   ) {
-    ori += arr[i] = randomInt(0, numOrientations - 1);
+    arr[i] = randomInt(0, numOrientations - 1);
   }
 };
 

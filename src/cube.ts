@@ -13,6 +13,7 @@ import {
   generateValidRandomOrientation,
   generateValidRandomPermutation,
 } from './utils';
+import type {CubeState} from './type'
 // Centers
 const [U, R, F, D, L, B] = CENTERS;
 // Corners
@@ -20,9 +21,11 @@ const [URF, UFL, ULB, UBR, DFR, DLF, DBL, DRB] = CORNERS;
 // Edges
 const [UR, UF, UL, UB, DR, DF, DL, DB, FR, FL, BL, BR] = EDGES;
 
-const [centerFacelet, cornerFacelet, edgeFacelet] = initFacelet();
+const { cornerFacelet, edgeFacelet} = initFacelet();
+
+
 class Cube {
-  static moves: Array<{
+  moves: Array<{
     center: number[];
     co: number[];
     ep: number[];
@@ -44,7 +47,10 @@ class Cube {
     generateValidRandomOrientation(this.co, this.eo);
   }
 
-  static initClass() {
+   initClass() {
+   
+  }
+  constructor(other?: CubeState) {
     this.moves = [
       // U
       {
@@ -129,34 +135,32 @@ class Cube {
     ];
 
     // x
-    Cube.moves.push(new Cube().move("R M' L'").toJSON());
+    this.moves.push(new Cube().move("R M' L'").toJSON());
 
     // y
-    Cube.moves.push(new Cube().move("U E' D'").toJSON());
+    this.moves.push(new Cube().move("U E' D'").toJSON());
 
     // z
-    Cube.moves.push(new Cube().move("F S B'").toJSON());
+    this.moves.push(new Cube().move("F S B'").toJSON());
 
     // u
-    Cube.moves.push(new Cube().move("U E'").toJSON());
+    this.moves.push(new Cube().move("U E'").toJSON());
 
     // r
-    Cube.moves.push(new Cube().move("R M'").toJSON());
+    this.moves.push(new Cube().move("R M'").toJSON());
 
     // f
-    Cube.moves.push(new Cube().move('F S').toJSON());
+    this.moves.push(new Cube().move('F S').toJSON());
 
     // d
-    Cube.moves.push(new Cube().move('D E').toJSON());
+    this.moves.push(new Cube().move('D E').toJSON());
 
     // l
-    Cube.moves.push(new Cube().move('L M').toJSON());
+    this.moves.push(new Cube().move('L M').toJSON());
 
     // b
-    Cube.moves.push(new Cube().move("B S'").toJSON());
-  }
-  constructor(other?: Cube) {
-    let x: number;
+    this.moves.push(new Cube().move("B S'").toJSON());
+
     if (other) {
       this.init(other);
     } else {
@@ -171,15 +175,10 @@ class Cube {
     this.newEp = Array(12).fill(0);
     this.newCo = Array(8).fill(0);
     this.newEo = Array(12).fill(0);
+    this.initClass()
   }
 
-  init(state: {
-    center: { slice: (arg0: number) => any };
-    co: { slice: (arg0: number) => any };
-    ep: { slice: (arg0: number) => any };
-    cp: { slice: (arg0: number) => any };
-    eo: { slice: (arg0: number) => any };
-  }) {
+  init(state:CubeState) {
     this.center = state.center.slice(0);
     this.co = state.co.slice(0);
     this.ep = state.ep.slice(0);
@@ -246,7 +245,7 @@ class Cube {
     return result.join('');
   }
 
-  static fromString(str: { [x: string]: any }) {
+  static fromString(str: string) {
     let i: number, j: number;
     const cube = new Cube();
 
@@ -341,7 +340,7 @@ class Cube {
   }
 
   // Multiply this Cube with another Cube, restricted to centers.
-  centerMultiply(other: this) {
+  centerMultiply(other: CubeState) {
     let from: string | number;
     for (let to = 0; to <= 5; to++) {
       from = other.center[to];
@@ -353,7 +352,7 @@ class Cube {
   }
 
   // Multiply this Cube with another Cube, restricted to corners.
-  cornerMultiply(other: this) {
+  cornerMultiply(other: CubeState) {
     let from: string | number;
     for (let to = 0; to <= 7; to++) {
       from = other.cp[to];
@@ -367,7 +366,7 @@ class Cube {
   }
 
   // Multiply this Cube with another Cube, restricted to edges
-  edgeMultiply(other: this) {
+  edgeMultiply(other: CubeState) {
     let from: string | number;
     for (let to = 0; to <= 11; to++) {
       from = other.ep[to];
@@ -397,7 +396,7 @@ class Cube {
         asc ? x <= end : x >= end;
         asc ? x++ : x--
       ) {
-        this.multiply(Cube.moves[face]);
+        this.multiply(this.moves[face]);
       }
     }
 
