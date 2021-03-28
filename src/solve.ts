@@ -1,66 +1,14 @@
-const Cube = this.Cube || require('./cube');
-
+import Cube from './cube';
+import { CENTERS, CORNERS, EDGES } from './constants';
+import { factorial, Cnk, max, rotateLeft, rotateRight } from './utils';
 // Centers
-const [U, R, F, D, L, B] = Array.from([0, 1, 2, 3, 4, 5]);
+const [U, R, F, D, L, B] = CENTERS;
 
 // Corners
-const [URF, UFL, ULB, UBR, DFR, DLF, DBL, DRB] = Array.from([0, 1, 2, 3, 4, 5, 6, 7]);
+const [URF, UFL, ULB, UBR, DFR, DLF, DBL, DRB] = CORNERS;
 
 // Edges
-const [UR, UF, UL, UB, DR, DF, DL, DB, FR, FL, BL, BR] = Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-
-
-//# Helpers
-
-// n choose k, i.e. the binomial coeffiecient
-const Cnk = function(n: number, k: number) {
-  if (n < k) { return 0; }
-
-  if (k > (n / 2)) {
-    k = n - k;
-  }
-
-  let s = 1;
-  let i = n;
-  let j = 1;
-  while (i !== (n - k)) {
-    s *= i;
-    s /= j;
-    i--;
-    j++;
-  }
-  return s;
-};
-
-// n!
-const factorial = function(n: number) {
-  let f = 1;
-  for (let i = 2, end = n, asc = 2 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-    f *= i;
-  }
-  return f;
-};
-
-// Maximum of two values
-const max = function(a: number, b: number) {
-  if (a > b) { return a; } else { return b; }
-};
-
-// Rotate elements between l and r left by one place
-const rotateLeft = function(array: { [x: string]: any; }, l: number, r: number) {
-  const tmp = array[l];
-  for (let i = l, end = r - 1, asc = l <= end; asc ? i <= end : i >= end; asc ? i++ : i--) { array[i] = array[i + 1]; }
-  return array[r] = tmp;
-};
-
-// Rotate elements between l and r right by one place
-const rotateRight = function(array: { [x: string]: any; }, l: number, r: number) {
-  const tmp = array[r];
-  for (let i = r, end = l + 1, asc = r <= end; asc ? i <= end : i >= end; asc ? i++ : i--) { array[i] = array[i - 1]; }
-  return array[l] = tmp;
-};
-
-
+const [UR, UF, UL, UB, DR, DF, DL, DB, FR, FL, BL, BR] = EDGES;
 // Generate a function that computes permutation indices.
 //
 // The permutation index actually encodes two indices: Combination,
@@ -71,10 +19,17 @@ const rotateRight = function(array: { [x: string]: any; }, l: number, r: number)
 //
 // and the index is A * maxB + B
 
-const permutationIndex = function(context: string, start: number, end: number, fromEnd: boolean) {
+const permutationIndex = (
+  context: string,
+  start: number,
+  end: number,
+  fromEnd: boolean
+) => {
   let maxAll: number, permName: string;
   let i: number;
-  if (fromEnd == null) { fromEnd = false; }
+  if (fromEnd == null) {
+    fromEnd = false;
+  }
   const maxOur = end - start;
   const maxB = factorial(maxOur + 1);
 
@@ -86,34 +41,59 @@ const permutationIndex = function(context: string, start: number, end: number, f
     permName = 'ep';
   }
 
-  const our = ((() => {
+  const our = (() => {
     let asc: boolean, end1: number, j: number;
     const result = [];
-    for (j = 0, i = j, end1 = maxOur, asc = 0 <= end1; asc ? j <= end1 : j >= end1; asc ? j++ : j--, i = j) {
+    for (
+      j = 0, i = j, end1 = maxOur, asc = 0 <= end1;
+      asc ? j <= end1 : j >= end1;
+      asc ? j++ : j--, i = j
+    ) {
       result.push(0);
     }
     return result;
-  })());
+  })();
 
   return function(index: number) {
-    let a: number, b: number, j: number, k: number, perm: { [x: string]: any; }, x: number;
+    let a: number,
+      b: number,
+      j: number,
+      k: number,
+      perm: { [x: string]: any },
+      x: number;
     if (index != null) {
       // Reset our to [start..end]
       let asc1: boolean, end2: number;
       let asc2: boolean, end3: number;
       let asc3: boolean, end4: number;
       let c: number;
-      for (i = 0, end2 = maxOur, asc1 = 0 <= end2; asc1 ? i <= end2 : i >= end2; asc1 ? i++ : i--) { our[i] = i + start; }
+      for (
+        i = 0, end2 = maxOur, asc1 = 0 <= end2;
+        asc1 ? i <= end2 : i >= end2;
+        asc1 ? i++ : i--
+      ) {
+        our[i] = i + start;
+      }
 
-      b = index % maxB;      // permutation
-      a = (index / maxB) | 0;  // combination
+      b = index % maxB; // permutation
+      a = (index / maxB) | 0; // combination
 
       // Invalidate all edges
       perm = this[permName];
-      for (i = 0, end3 = maxAll, asc2 = 0 <= end3; asc2 ? i <= end3 : i >= end3; asc2 ? i++ : i--) { perm[i] = -1; }
+      for (
+        i = 0, end3 = maxAll, asc2 = 0 <= end3;
+        asc2 ? i <= end3 : i >= end3;
+        asc2 ? i++ : i--
+      ) {
+        perm[i] = -1;
+      }
 
       // Generate permutation from index b
-      for (j = 1, end4 = maxOur, asc3 = 1 <= end4; asc3 ? j <= end4 : j >= end4; asc3 ? j++ : j--) {
+      for (
+        j = 1, end4 = maxOur, asc3 = 1 <= end4;
+        asc3 ? j <= end4 : j >= end4;
+        asc3 ? j++ : j--
+      ) {
         k = b % (j + 1);
         b = (b / (j + 1)) | 0;
         // TODO: Implement rotateRightBy(our, 0, j, k)
@@ -127,9 +107,13 @@ const permutationIndex = function(context: string, start: number, end: number, f
       x = maxOur;
       if (fromEnd) {
         let asc4: boolean, end5: number;
-        for (j = 0, end5 = maxAll, asc4 = 0 <= end5; asc4 ? j <= end5 : j >= end5; asc4 ? j++ : j--) {
+        for (
+          j = 0, end5 = maxAll, asc4 = 0 <= end5;
+          asc4 ? j <= end5 : j >= end5;
+          asc4 ? j++ : j--
+        ) {
           c = Cnk(maxAll - j, x + 1);
-          if ((a - c) >= 0) {
+          if (a - c >= 0) {
             perm[j] = our[maxOur - x];
             a -= c;
             x--;
@@ -137,9 +121,13 @@ const permutationIndex = function(context: string, start: number, end: number, f
         }
       } else {
         let asc5: boolean;
-        for (j = maxAll, asc5 = maxAll <= 0; asc5 ? j <= 0 : j >= 0; asc5 ? j++ : j--) {
+        for (
+          j = maxAll, asc5 = maxAll <= 0;
+          asc5 ? j <= 0 : j >= 0;
+          asc5 ? j++ : j--
+        ) {
           c = Cnk(j, x + 1);
-          if ((a - c) >= 0) {
+          if (a - c >= 0) {
             perm[j] = our[x];
             a -= c;
             x--;
@@ -148,19 +136,28 @@ const permutationIndex = function(context: string, start: number, end: number, f
       }
 
       return this;
-
     } else {
       let asc6: boolean, end6: number;
       let asc9: boolean;
       perm = this[permName];
-      for (i = 0, end6 = maxOur, asc6 = 0 <= end6; asc6 ? i <= end6 : i >= end6; asc6 ? i++ : i--) { our[i] = -1; }
-      a = (b = (x = 0));
+      for (
+        i = 0, end6 = maxOur, asc6 = 0 <= end6;
+        asc6 ? i <= end6 : i >= end6;
+        asc6 ? i++ : i--
+      ) {
+        our[i] = -1;
+      }
+      a = b = x = 0;
 
       // Compute the index a < ((maxAll + 1) choose (maxOur + 1)) and
       // the permutation
       if (fromEnd) {
         let asc7: boolean;
-        for (j = maxAll, asc7 = maxAll <= 0; asc7 ? j <= 0 : j >= 0; asc7 ? j++ : j--) {
+        for (
+          j = maxAll, asc7 = maxAll <= 0;
+          asc7 ? j <= 0 : j >= 0;
+          asc7 ? j++ : j--
+        ) {
           if (start <= perm[j] && perm[j] <= end) {
             a += Cnk(maxAll - j, x + 1);
             our[maxOur - x] = perm[j];
@@ -169,7 +166,11 @@ const permutationIndex = function(context: string, start: number, end: number, f
         }
       } else {
         let asc8: boolean, end7: number;
-        for (j = 0, end7 = maxAll, asc8 = 0 <= end7; asc8 ? j <= end7 : j >= end7; asc8 ? j++ : j--) {
+        for (
+          j = 0, end7 = maxAll, asc8 = 0 <= end7;
+          asc8 ? j <= end7 : j >= end7;
+          asc8 ? j++ : j--
+        ) {
           if (start <= perm[j] && perm[j] <= end) {
             a += Cnk(j, x + 1);
             our[x] = perm[j];
@@ -179,20 +180,23 @@ const permutationIndex = function(context: string, start: number, end: number, f
       }
 
       // Compute the index b < (maxOur + 1)! for the permutation
-      for (j = maxOur, asc9 = maxOur <= 0; asc9 ? j <= 0 : j >= 0; asc9 ? j++ : j--) {
+      for (
+        j = maxOur, asc9 = maxOur <= 0;
+        asc9 ? j <= 0 : j >= 0;
+        asc9 ? j++ : j--
+      ) {
         k = 0;
-        while (our[j] !== (start + j)) {
+        while (our[j] !== start + j) {
           rotateLeft(our, 0, j);
           k++;
         }
-        b = ((j + 1) * b) + k;
+        b = (j + 1) * b + k;
       }
 
-      return (a * maxB) + b;
+      return a * maxB + b;
     }
   };
 };
-
 
 const Include = {
   // The twist of the 8 corners, 0 <= twist < 3^7. The orientation of
@@ -210,13 +214,12 @@ const Include = {
         parity += ori;
       }
 
-      this.co[7] = ((3 - (parity % 3)) % 3);
+      this.co[7] = (3 - (parity % 3)) % 3;
       return this;
-
     } else {
       let v = 0;
       for (i = 0; i <= 6; i++) {
-        v = (3 * v) + this.co[i];
+        v = 3 * v + this.co[i];
       }
       return v;
     }
@@ -236,13 +239,12 @@ const Include = {
         parity += ori;
       }
 
-      this.eo[11] = ((2 - (parity % 2)) % 2);
+      this.eo[11] = (2 - (parity % 2)) % 2;
       return this;
-
     } else {
       let v = 0;
       for (i = 0; i <= 10; i++) {
-        v = (2 * v) + this.eo[i];
+        v = 2 * v + this.eo[i];
       }
       return v;
     }
@@ -251,9 +253,19 @@ const Include = {
   // Parity of the corner permutation
   cornerParity() {
     let s = 0;
-    for (let i = DRB, end = URF + 1, asc = DRB <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-      for (let start = i - 1, j = start, end1 = URF, asc1 = start <= end1; asc1 ? j <= end1 : j >= end1; asc1 ? j++ : j--) {
-        if (this.cp[j] > this.cp[i]) { s++; }
+    for (
+      let i = DRB, end = URF + 1, asc = DRB <= end;
+      asc ? i <= end : i >= end;
+      asc ? i++ : i--
+    ) {
+      for (
+        let start = i - 1, j = start, end1 = URF, asc1 = start <= end1;
+        asc1 ? j <= end1 : j >= end1;
+        asc1 ? j++ : j--
+      ) {
+        if (this.cp[j] > this.cp[i]) {
+          s++;
+        }
       }
     }
 
@@ -264,9 +276,19 @@ const Include = {
   // the same if the cube is solvable.
   edgeParity() {
     let s = 0;
-    for (let i = BR, end = UR + 1, asc = BR <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-      for (let start = i - 1, j = start, end1 = UR, asc1 = start <= end1; asc1 ? j <= end1 : j >= end1; asc1 ? j++ : j--) {
-        if (this.ep[j] > this.ep[i]) { s++; }
+    for (
+      let i = BR, end = UR + 1, asc = BR <= end;
+      asc ? i <= end : i >= end;
+      asc ? i++ : i--
+    ) {
+      for (
+        let start = i - 1, j = start, end1 = UR, asc1 = start <= end1;
+        asc1 ? j <= end1 : j >= end1;
+        asc1 ? j++ : j--
+      ) {
+        if (this.ep[j] > this.ep[i]) {
+          s++;
+        }
       }
     }
 
@@ -286,27 +308,33 @@ const Include = {
   URtoDF: permutationIndex('edges', UR, DF),
 
   // Permutation of the equator slice edges FR, FL, BL and BR
-  FRtoBR: permutationIndex('edges', FR, BR, true)
+  FRtoBR: permutationIndex('edges', FR, BR, true),
 };
-
 
 for (let key in Include) {
   const value = Include[key];
   Cube.prototype[key] = value;
 }
 
-
-const computeMoveTable = function(context: string, coord: string | number, size: number) {
+const computeMoveTable = function(
+  context: string,
+  coord: string | number,
+  size: number
+) {
   // Loop through all valid values for the coordinate, setting cube's
   // state in each iteration. Then apply each of the 18 moves to the
   // cube, and compute the resulting coordinate.
   const apply = context === 'corners' ? 'cornerMultiply' : 'edgeMultiply';
 
-  const cube = new Cube;
+  const cube = new Cube();
 
   return (() => {
     const result = [];
-    for (let i = 0, end = size-1, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (
+      let i = 0, end = size - 1, asc = 0 <= end;
+      asc ? i <= end : i >= end;
+      asc ? i++ : i--
+    ) {
       cube[coord](i);
       const inner = [];
       for (let j = 0; j <= 5; j++) {
@@ -328,8 +356,8 @@ const computeMoveTable = function(context: string, coord: string | number, size:
 // merge the URtoUL and UBtoDF coordinates to URtoDF in the beginning
 // of phase 2.
 const mergeURtoDF = (function() {
-  const a = new Cube;
-  const b = new Cube;
+  const a = new Cube();
+  const b = new Cube();
 
   return function(URtoUL: any, UBtoDF: any) {
     // Collisions can be found because unset are set to -1
@@ -339,7 +367,7 @@ const mergeURtoDF = (function() {
     for (let i = 0; i <= 7; i++) {
       if (a.ep[i] !== -1) {
         if (b.ep[i] !== -1) {
-          return -1;  // collision
+          return -1; // collision
         } else {
           b.ep[i] = a.ep[i];
         }
@@ -350,22 +378,22 @@ const mergeURtoDF = (function() {
   };
 })();
 
-const N_TWIST = 2187;    // 3^7 corner orientations
-const N_FLIP = 2048;     // 2^11 possible edge flips
-const N_PARITY = 2;      // 2 possible parities
+const N_TWIST = 2187; // 3^7 corner orientations
+const N_FLIP = 2048; // 2^11 possible edge flips
+const N_PARITY = 2; // 2 possible parities
 
-const N_FRtoBR = 11880;  // 12!/(12-4)! permutations of FR..BR edges
-const N_SLICE1 = 495;    // (12 choose 4) possible positions of FR..BR edges
-const N_SLICE2 = 24;     // 4! permutations of FR..BR edges in phase 2
+const N_FRtoBR = 11880; // 12!/(12-4)! permutations of FR..BR edges
+const N_SLICE1 = 495; // (12 choose 4) possible positions of FR..BR edges
+const N_SLICE2 = 24; // 4! permutations of FR..BR edges in phase 2
 
-const N_URFtoDLF = 20160;  // 8!/(8-6)! permutations of URF..DLF corners
+const N_URFtoDLF = 20160; // 8!/(8-6)! permutations of URF..DLF corners
 
 // The URtoDF move table is only computed for phase 2 because the full
 // table would have >650000 entries
-const N_URtoDF = 20160;  // 8!/(8-6)! permutation of UR..DF edges in phase 2
+const N_URtoDF = 20160; // 8!/(8-6)! permutation of UR..DF edges in phase 2
 
-const N_URtoUL = 1320;  // 12!/(12-3)! permutations of UR..UL edges
-const N_UBtoDF = 1320;  // 12!/(12-3)! permutations of UB..DF edges
+const N_URtoUL = 1320; // 12!/(12-3)! permutations of UR..UL edges
+const N_UBtoDF = 1320; // 12!/(12-3)! permutations of UB..DF edges
 
 // The move table for parity is so small that it's included here
 Cube.moveTables = {
@@ -380,7 +408,7 @@ Cube.moveTables = {
   URtoDF: null,
   URtoUL: null,
   UBtoDF: null,
-  mergeURtoDF: null
+  mergeURtoDF: null,
 };
 
 // Other move tables are computed on the fly
@@ -393,28 +421,33 @@ const moveTableParams = {
   URtoDF: ['edges', N_URtoDF],
   URtoUL: ['edges', N_URtoUL],
   UBtoDF: ['edges', N_UBtoDF],
-  mergeURtoDF: []  // handled specially
+  mergeURtoDF: [], // handled specially
 };
 
-Cube.computeMoveTables = function(...tables: { length?: any; }) {
+Cube.computeMoveTables = function(...tables: { length?: any }) {
   if (tables.length === 0) {
-    tables = ((() => {
+    tables = (() => {
       const result = [];
       for (let name in moveTableParams) {
         result.push(name);
       }
       return result;
-    })());
+    })();
   }
 
   for (let tableName of Array.from(tables)) {
     // Already computed
-    if (this.moveTables[tableName] !== null) { continue; }
+    if (this.moveTables[tableName] !== null) {
+      continue;
+    }
 
     if (tableName === 'mergeURtoDF') {
-      this.moveTables.mergeURtoDF = ((() => __range__(0, 335, true).map((URtoUL: any) =>
-        __range__(0, 335, true).map((UBtoDF: any) =>
-          mergeURtoDF(URtoUL, UBtoDF)))))();
+      this.moveTables.mergeURtoDF = (() =>
+        __range__(0, 335, true).map((URtoUL: any) =>
+          __range__(0, 335, true).map((UBtoDF: any) =>
+            mergeURtoDF(URtoUL, UBtoDF)
+          )
+        ))();
     } else {
       const [scope, size] = Array.from(moveTableParams[tableName]);
       this.moveTables[tableName] = computeMoveTable(scope, tableName, size);
@@ -424,51 +457,72 @@ Cube.computeMoveTables = function(...tables: { length?: any; }) {
   return this;
 };
 
-
 // Phase 1: All moves are valid
-const allMoves1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+const allMoves1 = [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+];
 
 // The list of next valid phase 1 moves when the given face was turned
 // in the last move
-const nextMoves1 = ((() => (() => {
-  const result = [];
-  for (let lastFace = 0; lastFace <= 5; lastFace++) {
-    const next = [];
-    // Don't allow commuting moves, e.g. U U'. Also make sure that
-    // opposite faces are always moved in the same order, i.e. allow
-    // U D but no D U. This avoids sequences like U D U'.
-    for (let face = 0; face <= 5; face++) {
-      if ((face !== lastFace) && (face !== (lastFace - 3))) {
-        for (let power = 0; power <= 2; power++) {  // single, double or inverse move
-          next.push((face * 3) + power);
+const nextMoves1 = (() =>
+  (() => {
+    const result = [];
+    for (let lastFace = 0; lastFace <= 5; lastFace++) {
+      const next = [];
+      // Don't allow commuting moves, e.g. U U'. Also make sure that
+      // opposite faces are always moved in the same order, i.e. allow
+      // U D but no D U. This avoids sequences like U D U'.
+      for (let face = 0; face <= 5; face++) {
+        if (face !== lastFace && face !== lastFace - 3) {
+          for (let power = 0; power <= 2; power++) {
+            // single, double or inverse move
+            next.push(face * 3 + power);
+          }
         }
       }
+      result.push(next);
     }
-    result.push(next);
-  }
-  return result;
-})()))();
+    return result;
+  })())();
 
 // Phase 2: Double moves of all faces plus quarter moves of U and D
 const allMoves2 = [0, 1, 2, 4, 7, 9, 10, 11, 13, 16];
 
-const nextMoves2 = ((() => (() => {
-  const result = [];
-  for (let lastFace = 0; lastFace <= 5; lastFace++) {
-    const next = [];
-    for (let face = 0; face <= 5; face++) {
-      // Allow all moves of U and D and double moves of others
-      if ((face !== lastFace) && (face !== (lastFace - 3))) {
-        const powers = [0, 3].includes(face) ? [0, 1, 2] : [1];
-        for (let power of Array.from(powers)) {
-          next.push((face * 3) + power);
+const nextMoves2 = (() =>
+  (() => {
+    const result = [];
+    for (let lastFace = 0; lastFace <= 5; lastFace++) {
+      const next = [];
+      for (let face = 0; face <= 5; face++) {
+        // Allow all moves of U and D and double moves of others
+        if (face !== lastFace && face !== lastFace - 3) {
+          const powers = [0, 3].includes(face) ? [0, 1, 2] : [1];
+          for (let power of Array.from(powers)) {
+            next.push(face * 3 + power);
+          }
         }
       }
+      result.push(next);
     }
-    result.push(next);
-  }
-  return result;
-})()))();
+    return result;
+  })())();
 
 // 8 values are encoded in one number
 const pruning = function(table: {}, index: number, value: number) {
@@ -478,19 +532,26 @@ const pruning = function(table: {}, index: number, value: number) {
 
   if (value != null) {
     // Set
-    table[slot] &= ~(0xF << shift);
-    table[slot] |= (value << shift);
+    table[slot] &= ~(0xf << shift);
+    table[slot] |= value << shift;
     return value;
   } else {
     // Get
-    return (table[slot] & (0xF << shift)) >>> shift;
+    return (table[slot] & (0xf << shift)) >>> shift;
   }
 };
 
-const computePruningTable = function(phase: number, size: number, currentCoords: (arg0: number) => any, nextIndex: (arg0: any, arg1: any) => any) {
+const computePruningTable = function(
+  phase: number,
+  size: number,
+  currentCoords: (arg0: number) => any,
+  nextIndex: (arg0: any, arg1: any) => any
+) {
   // Initialize all values to 0xF
   let moves: {};
-  const table = (__range__(0, Math.ceil(size / 8) - 1, true).map((x: any) => 0xFFFFFFFF));
+  const table = __range__(0, Math.ceil(size / 8) - 1, true).map(
+    (x: any) => 0xffffffff
+  );
 
   if (phase === 1) {
     moves = allMoves1;
@@ -506,12 +567,16 @@ const computePruningTable = function(phase: number, size: number, currentCoords:
   // compute the next state. Stop when all states have been assigned a
   // depth.
   while (done !== size) {
-    for (let index = 0, end = size - 1, asc = 0 <= end; asc ? index <= end : index >= end; asc ? index++ : index--) {
+    for (
+      let index = 0, end = size - 1, asc = 0 <= end;
+      asc ? index <= end : index >= end;
+      asc ? index++ : index--
+    ) {
       if (pruning(table, index) === depth) {
         const current = currentCoords(index);
         for (let move of Array.from(moves)) {
           const next = nextIndex(current, move);
-          if (pruning(table, next) === 0xF) {
+          if (pruning(table, next) === 0xf) {
             pruning(table, next, depth + 1);
             done++;
           }
@@ -528,7 +593,7 @@ Cube.pruningTables = {
   sliceTwist: null,
   sliceFlip: null,
   sliceURFtoDLFParity: null,
-  sliceURtoDFParity: null
+  sliceURtoDFParity: null,
 };
 
 const pruningTableParams = {
@@ -536,68 +601,80 @@ const pruningTableParams = {
   sliceTwist: [
     1,
     N_SLICE1 * N_TWIST,
-    (    index: number) => [index % N_SLICE1, (index / N_SLICE1) | 0],
+    (index: number) => [index % N_SLICE1, (index / N_SLICE1) | 0],
     function(current: any, move: string | number) {
       const [slice, twist] = Array.from(current);
       const newSlice = (Cube.moveTables.FRtoBR[slice * 24][move] / 24) | 0;
       const newTwist = Cube.moveTables.twist[twist][move];
-      return (newTwist * N_SLICE1) + newSlice;
-    }
+      return newTwist * N_SLICE1 + newSlice;
+    },
   ],
   sliceFlip: [
     1,
     N_SLICE1 * N_FLIP,
-    (    index: number) => [index % N_SLICE1, (index / N_SLICE1) | 0],
+    (index: number) => [index % N_SLICE1, (index / N_SLICE1) | 0],
     function(current: any, move: string | number) {
       const [slice, flip] = Array.from(current);
       const newSlice = (Cube.moveTables.FRtoBR[slice * 24][move] / 24) | 0;
       const newFlip = Cube.moveTables.flip[flip][move];
-      return (newFlip * N_SLICE1) + newSlice;
-    }
+      return newFlip * N_SLICE1 + newSlice;
+    },
   ],
   sliceURFtoDLFParity: [
     2,
     N_SLICE2 * N_URFtoDLF * N_PARITY,
-    (    index: number) => [index % 2, ((index / 2) | 0) % N_SLICE2, (((index / 2) | 0) / N_SLICE2) | 0],
+    (index: number) => [
+      index % 2,
+      ((index / 2) | 0) % N_SLICE2,
+      (((index / 2) | 0) / N_SLICE2) | 0,
+    ],
     function(current: any, move: string | number) {
       const [parity, slice, URFtoDLF] = Array.from(current);
       const newParity = Cube.moveTables.parity[parity][move];
       const newSlice = Cube.moveTables.FRtoBR[slice][move];
       const newURFtoDLF = Cube.moveTables.URFtoDLF[URFtoDLF][move];
-      return (((newURFtoDLF * N_SLICE2) + newSlice) * 2) + newParity;
-    }
+      return (newURFtoDLF * N_SLICE2 + newSlice) * 2 + newParity;
+    },
   ],
   sliceURtoDFParity: [
     2,
     N_SLICE2 * N_URtoDF * N_PARITY,
-    (    index: number) => [index % 2, ((index / 2) | 0) % N_SLICE2, (((index / 2) | 0) / N_SLICE2) | 0],
+    (index: number) => [
+      index % 2,
+      ((index / 2) | 0) % N_SLICE2,
+      (((index / 2) | 0) / N_SLICE2) | 0,
+    ],
     function(current: any, move: string | number) {
       const [parity, slice, URtoDF] = Array.from(current);
       const newParity = Cube.moveTables.parity[parity][move];
       const newSlice = Cube.moveTables.FRtoBR[slice][move];
       const newURtoDF = Cube.moveTables.URtoDF[URtoDF][move];
-      return (((newURtoDF * N_SLICE2) + newSlice) * 2) + newParity;
-    }
-  ]
+      return (newURtoDF * N_SLICE2 + newSlice) * 2 + newParity;
+    },
+  ],
 };
 
-Cube.computePruningTables = function(...tables: { length?: any; }) {
+Cube.computePruningTables = function(...tables: { length?: any }) {
   if (tables.length === 0) {
-    tables = ((() => {
+    tables = (() => {
       const result = [];
       for (let name in pruningTableParams) {
         result.push(name);
       }
       return result;
-    })());
+    })();
   }
 
   for (let tableName of Array.from(tables)) {
     // Already computed
-    if (this.pruningTables[tableName] !== null) { continue; }
+    if (this.pruningTables[tableName] !== null) {
+      continue;
+    }
 
     const params = pruningTableParams[tableName];
-    this.pruningTables[tableName] = computePruningTable(...Array.from(params || []));
+    this.pruningTables[tableName] = computePruningTable(
+      ...Array.from(params || [])
+    );
   }
 
   return this;
@@ -610,7 +687,9 @@ Cube.initSolver = function() {
 
 Cube.prototype.solveUpright = function(maxDepth: number) {
   // Names for all moves, i.e. U, U2, U', F, F2, ...
-  if (maxDepth == null) { maxDepth = 22; }
+  if (maxDepth == null) {
+    maxDepth = 22;
+  }
   const moveNames = (function() {
     const faceName = ['U', 'R', 'F', 'D', 'L', 'B'];
     const powerName = ['', '2', "'"];
@@ -643,10 +722,20 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
       this.lastMove = null;
       this.depth = 0;
 
-      if (cube) { this.init(cube); }
+      if (cube) {
+        this.init(cube);
+      }
     }
 
-    init(cube: { flip: () => any; twist: () => any; FRtoBR: () => number; cornerParity: () => any; URFtoDLF: () => any; URtoUL: () => any; UBtoDF: () => any; }) {
+    init(cube: {
+      flip: () => any;
+      twist: () => any;
+      FRtoBR: () => number;
+      cornerParity: () => any;
+      URFtoDLF: () => any;
+      URtoUL: () => any;
+      UBtoDF: () => any;
+    }) {
       // Phase 1 coordinates
       this.flip = cube.flip();
       this.twist = cube.twist();
@@ -686,17 +775,21 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
 
     // Return the next valid phase 1 moves for this state
     moves1() {
-      if (this.lastMove !== null) { return nextMoves1[(this.lastMove / 3) | 0]; } else { return allMoves1; }
+      if (this.lastMove !== null) {
+        return nextMoves1[(this.lastMove / 3) | 0];
+      } else {
+        return allMoves1;
+      }
     }
 
     // Compute the minimum number of moves to the end of phase 1
     minDist1() {
       // The maximum number of moves to the end of phase 1 wrt. the
       // combination flip and slice coordinates only
-      const d1 = this.pruning('sliceFlip', (N_SLICE1 * this.flip) + this.slice);
+      const d1 = this.pruning('sliceFlip', N_SLICE1 * this.flip + this.slice);
 
       // The combination of twist and slice coordinates
-      const d2 = this.pruning('sliceTwist', (N_SLICE1 * this.twist) + this.slice);
+      const d2 = this.pruning('sliceTwist', N_SLICE1 * this.twist + this.slice);
 
       // The true minimal distance is the maximum of these two
       return max(d1, d2);
@@ -716,20 +809,25 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
       return next;
     }
 
-
     //# Phase 2
 
     // Return the next valid phase 2 moves for this state
     moves2() {
-      if (this.lastMove !== null) { return nextMoves2[(this.lastMove / 3) | 0]; } else { return allMoves2; }
+      if (this.lastMove !== null) {
+        return nextMoves2[(this.lastMove / 3) | 0];
+      } else {
+        return allMoves2;
+      }
     }
 
     // Compute the minimum number of moves to the solved cube
     minDist2() {
-      const index1 = (((N_SLICE2 * this.URtoDF) + this.FRtoBR) * N_PARITY) + this.parity;
+      const index1 =
+        (N_SLICE2 * this.URtoDF + this.FRtoBR) * N_PARITY + this.parity;
       const d1 = this.pruning('sliceURtoDFParity', index1);
 
-      const index2 = (((N_SLICE2 * this.URFtoDLF) + this.FRtoBR) * N_PARITY) + this.parity;
+      const index2 =
+        (N_SLICE2 * this.URFtoDLF + this.FRtoBR) * N_PARITY + this.parity;
       const d2 = this.pruning('sliceURFtoDLFParity', index2);
 
       return max(d1, d2);
@@ -737,7 +835,9 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
 
     // Initialize phase 2 coordinates
     init2(top: boolean) {
-      if (top == null) { top = true; }
+      if (top == null) {
+        top = true;
+      }
       if (this.parent === null) {
         // Already assigned for the initial state
         return;
@@ -747,7 +847,11 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
       // parent's state.
       this.parent.init2(false);
 
-      this.URFtoDLF = this.move('URFtoDLF', this.parent.URFtoDLF, this.lastMove);
+      this.URFtoDLF = this.move(
+        'URFtoDLF',
+        this.parent.URFtoDLF,
+        this.lastMove
+      );
       this.FRtoBR = this.move('FRtoBR', this.parent.FRtoBR, this.lastMove);
       this.parity = this.move('parity', this.parent.parity, this.lastMove);
       this.URtoUL = this.move('URtoUL', this.parent.URtoUL, this.lastMove);
@@ -756,7 +860,11 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
       if (top) {
         // This is the initial phase 2 state. Get the URtoDF coordinate
         // by merging URtoUL and UBtoDF
-        return this.URtoDF = this.move('mergeURtoDF', this.URtoUL, this.UBtoDF);
+        return (this.URtoDF = this.move(
+          'mergeURtoDF',
+          this.URtoUL,
+          this.UBtoDF
+        ));
       }
     }
 
@@ -776,31 +884,47 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
     }
   }
 
-
   let solution = null;
 
-  const phase1search = (state: any) => (() => {
-    const result = [];
-    for (let depth = 1, end = maxDepth, asc = 1 <= end; asc ? depth <= end : depth >= end; asc ? depth++ : depth--) {
-      phase1(state, depth);
-      if (solution !== null) { break; } else {
-        result.push(undefined);
+  const phase1search = (state: any) =>
+    (() => {
+      const result = [];
+      for (
+        let depth = 1, end = maxDepth, asc = 1 <= end;
+        asc ? depth <= end : depth >= end;
+        asc ? depth++ : depth--
+      ) {
+        phase1(state, depth);
+        if (solution !== null) {
+          break;
+        } else {
+          result.push(undefined);
+        }
       }
-    }
-    return result;
-  })();
+      return result;
+    })();
 
-  var phase1 = function(state: { minDist1: () => number; lastMove: any; moves1: () => any; next1: (arg0: any) => any; }, depth: number) {
+  var phase1 = function(
+    state: {
+      minDist1: () => number;
+      lastMove: any;
+      moves1: () => any;
+      next1: (arg0: any) => any;
+    },
+    depth: number
+  ) {
     if (depth === 0) {
       if (state.minDist1() === 0) {
         // Make sure we don't start phase 2 with a phase 2 move as the
         // last move in phase 1, because phase 2 would then repeat the
         // same move.
-        if ((state.lastMove === null) || !Array.from(allMoves2).includes(state.lastMove)) {
+        if (
+          state.lastMove === null ||
+          !Array.from(allMoves2).includes(state.lastMove)
+        ) {
           return phase2search(state);
         }
       }
-
     } else if (depth > 0) {
       if (state.minDist1() <= depth) {
         return (() => {
@@ -809,7 +933,9 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
             const next = state.next1(move);
             phase1(next, depth - 1);
             freeStates.push(next);
-            if (solution !== null) { break; } else {
+            if (solution !== null) {
+              break;
+            } else {
               result.push(undefined);
             }
           }
@@ -819,15 +945,21 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
     }
   };
 
-  var phase2search = function(state: { init2: () => void; depth: number; }) {
+  var phase2search = function(state: { init2: () => void; depth: number }) {
     // Initialize phase 2 coordinates
     state.init2();
 
     return (() => {
       const result = [];
-      for (let depth = 1, end = maxDepth - state.depth, asc = 1 <= end; asc ? depth <= end : depth >= end; asc ? depth++ : depth--) {
+      for (
+        let depth = 1, end = maxDepth - state.depth, asc = 1 <= end;
+        asc ? depth <= end : depth >= end;
+        asc ? depth++ : depth--
+      ) {
         phase2(state, depth);
-        if (solution !== null) { break; } else {
+        if (solution !== null) {
+          break;
+        } else {
           result.push(undefined);
         }
       }
@@ -835,10 +967,18 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
     })();
   };
 
-  var phase2 = function(state: { minDist2: () => number; solution: () => any; moves2: () => any; next2: (arg0: any) => any; }, depth: number) {
+  var phase2 = function(
+    state: {
+      minDist2: () => number;
+      solution: () => any;
+      moves2: () => any;
+      next2: (arg0: any) => any;
+    },
+    depth: number
+  ) {
     if (depth === 0) {
       if (state.minDist2() === 0) {
-        return solution = state.solution();
+        return (solution = state.solution());
       }
     } else if (depth > 0) {
       if (state.minDist2() <= depth) {
@@ -848,7 +988,9 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
             const next = state.next2(move);
             phase2(next, depth - 1);
             freeStates.push(next);
-            if (solution !== null) { break; } else {
+            if (solution !== null) {
+              break;
+            } else {
               result.push(undefined);
             }
           }
@@ -858,7 +1000,9 @@ Cube.prototype.solveUpright = function(maxDepth: number) {
     }
   };
 
-  var freeStates = (__range__(0, maxDepth + 1, true).map((x: any) => new State));
+  var freeStates = __range__(0, maxDepth + 1, true).map(
+    (x: any) => new State()
+  );
   const state = freeStates.pop().init(this);
   phase1search(state);
   freeStates.push(state);
@@ -873,7 +1017,7 @@ const faceNums = {
   F: 2,
   D: 3,
   L: 4,
-  B: 5
+  B: 5,
 };
 
 const faceNames = {
@@ -882,11 +1026,13 @@ const faceNames = {
   2: 'F',
   3: 'D',
   4: 'L',
-  5: 'B'
+  5: 'B',
 };
 
 Cube.prototype.solve = function(maxDepth: number) {
-  if (maxDepth == null) { maxDepth = 22; }
+  if (maxDepth == null) {
+    maxDepth = 22;
+  }
   const clone = this.clone();
   const upright = clone.upright();
   clone.move(upright);

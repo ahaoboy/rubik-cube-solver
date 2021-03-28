@@ -3,6 +3,9 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "name": "rubik-cube-solver",
+  "author": "ahaoboy",
+  "module": "dist/rubik-cube-solver.esm.js",
   "files": [
     "dist",
     "src"
@@ -12,9 +15,11 @@
   },
   "scripts": {
     "start": "tsdx watch",
+    "dev": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
+    "pub": "npm pub",
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
@@ -29,9 +34,6 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "rubik-cube-solver",
-  "author": "ahaoboy",
-  "module": "dist/rubik-cube-solver.esm.js",
   "devDependencies": {
     "husky": "^5.2.0",
     "tsdx": "^0.14.1",
