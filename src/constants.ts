@@ -69,3 +69,27 @@ export const faceNames = {
   16: 'l',
   17: 'b',
 } as const;
+
+// Phase 1: All moves are valid
+export const allMoves1 = [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+];
+// Phase 2: Double moves of all faces plus quarter moves of U and D
+export const allMoves2 = [0, 1, 2, 4, 7, 9, 10, 11, 13, 16];

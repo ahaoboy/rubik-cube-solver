@@ -1,4 +1,4 @@
-import { faceNums } from './constants';
+import { faceNums, allMoves1, allMoves2 } from './constants';
 // n choose k, i.e. the binomial coeffiecient
 export const Cnk = (n: number, k: number) => {
   if (n < k) {
@@ -264,3 +264,98 @@ export const generateValidRandomOrientation = (co: number[], eo: number[]) => {
     randomizeOrientation(eo, 2);
   }
 };
+
+// 8 values are encoded in one number
+export const pruning = (table: number[], index: number, value?: number) => {
+  const pos = index % 8;
+  const slot = index >> 3;
+  const shift = pos << 2;
+
+  if (value !== null && value !== undefined) {
+    // Set
+    table[slot] &= ~(0xf << shift);
+    table[slot] |= value << shift;
+    return value;
+  } else {
+    // Get
+    return (table[slot] & (0xf << shift)) >>> shift;
+  }
+};
+
+export const computePruningTable = (
+  phase: number,
+  size: number,
+  currentCoords: (arg0: number) => any,
+  nextIndex: (arg0: any, arg1: any) => any
+) => {
+  let moves: number[];
+  const table = range(0, Math.ceil(size / 8) - 1, true).fill(0xffffffff);
+  if (phase === 1) {
+    moves = allMoves1;
+  } else {
+    moves = allMoves2;
+  }
+  let depth = 0;
+  pruning(table, 0, depth);
+  let done = 1;
+  while (done !== size) {
+    for (
+      let index = 0, end = size - 1, asc = 0 <= end;
+      asc ? index <= end : index >= end;
+      asc ? index++ : index--
+    ) {
+      if (pruning(table, index) === depth) {
+        const current = currentCoords(index);
+        for (let move of Array.from(moves)) {
+          const next = nextIndex(current, move);
+          if (pruning(table, next) === 0xf) {
+            pruning(table, next, depth + 1);
+            done++;
+          }
+        }
+      }
+    }
+    depth++;
+  }
+  return table;
+};
+
+export const getNextMoves1 = () => {
+  const result = [];
+  for (let lastFace = 0; lastFace <= 5; lastFace++) {
+    const next = [];
+    // Don't allow commuting moves, e.g. U U'. Also make sure that
+    // opposite faces are always moved in the same order, i.e. allow
+    // U D but no D U. This avoids sequences like U D U'.
+    for (let face = 0; face <= 5; face++) {
+      if (face !== lastFace && face !== lastFace - 3) {
+        for (let power = 0; power <= 2; power++) {
+          // single, double or inverse move
+          next.push(face * 3 + power);
+        }
+      }
+    }
+    result.push(next);
+  }
+  return result;
+};
+
+export const getNextMoves2 = () => {
+  const result = [];
+  for (let lastFace = 0; lastFace <= 5; lastFace++) {
+    const next = [];
+    for (let face = 0; face <= 5; face++) {
+      // Allow all moves of U and D and double moves of others
+      if (face !== lastFace && face !== lastFace - 3) {
+        const powers = [0, 3].includes(face) ? [0, 1, 2] : [1];
+        for (let power of Array.from(powers)) {
+          next.push(face * 3 + power);
+        }
+      }
+    }
+    result.push(next);
+  }
+  return result;
+};
+
+

@@ -134,32 +134,32 @@ class Cube {
       },
     ];
 
-    // x
-    this.moves.push(new Cube().move("R M' L'").toJSON());
+    // // x
+    // this.moves.push(new Cube().move("R M' L'").toJSON());
 
-    // y
-    this.moves.push(new Cube().move("U E' D'").toJSON());
+    // // y
+    // this.moves.push(new Cube().move("U E' D'").toJSON());
 
-    // z
-    this.moves.push(new Cube().move("F S B'").toJSON());
+    // // z
+    // this.moves.push(new Cube().move("F S B'").toJSON());
 
-    // u
-    this.moves.push(new Cube().move("U E'").toJSON());
+    // // u
+    // this.moves.push(new Cube().move("U E'").toJSON());
 
-    // r
-    this.moves.push(new Cube().move("R M'").toJSON());
+    // // r
+    // this.moves.push(new Cube().move("R M'").toJSON());
 
-    // f
-    this.moves.push(new Cube().move('F S').toJSON());
+    // // f
+    // this.moves.push(new Cube().move('F S').toJSON());
 
-    // d
-    this.moves.push(new Cube().move('D E').toJSON());
+    // // d
+    // this.moves.push(new Cube().move('D E').toJSON());
 
-    // l
-    this.moves.push(new Cube().move('L M').toJSON());
+    // // l
+    // this.moves.push(new Cube().move('L M').toJSON());
 
-    // b
-    this.moves.push(new Cube().move("B S'").toJSON());
+    // // b
+    // this.moves.push(new Cube().move("B S'").toJSON());
 
     if (other) {
       this.init(other);
@@ -451,7 +451,7 @@ class Cube {
     return result.join(' ');
   }
 
-  static inverse(arg: number[]) {
+  inverse(arg: number[]) {
     let move: number, face: number, power: number;
     const result = (() => {
       const result1 = [];
