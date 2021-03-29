@@ -1,4 +1,3 @@
-import Cube from './cube';
+import Cube from './solve';
 
 export { Cube };
-console.error('cube');
